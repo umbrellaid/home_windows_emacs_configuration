@@ -1,1 +1,0 @@
-# home_windows_emacs_configuration
