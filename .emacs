@@ -23,6 +23,14 @@
 ;; https://github.com/pprevos/emacs-writing-studio
 ;; Peter Prevos
 ;; https://github.com/pprevos
+;; Font Type Information
+;; https://protesilaos.com/codelog/2025-02-04-aporetic-fonts-1-0-0/
+;; Iosevka Comfy is discontinued hello Aporetic fonts
+;; 2025-02-04
+;; https://github.com/protesilaos/aporetic
+;; Other font options
+;; https://www.nerdfonts.com/
+;; https://www.nerdfonts.com/font-downloads
 
 (use-package package
   :ensure nil
@@ -62,11 +70,16 @@
   (setq sentence-end-double-space nil)
   (setq-default fill-column 80)
   (set-default-coding-systems 'utf-8)
+  (set-language-environment "UTF-8")
+  (recentf-mode t)
+  (setq recentf-max-saved-items 65536)
+  (setq-default indent-tabs-mode nil)
   (blink-cursor-mode 0))
 
 (use-package modus-themes
   :ensure t
   :config
+  (mapc #'disable-theme custom-enabled-themes)
   (load-theme 'modus-vivendi-tinted :no-confirm-loading))
 
 (use-package nerd-icons
@@ -177,9 +190,9 @@
         (locate-user-emacs-file "fontaine-latest-state.eld"))
   (setq fontaine-presets
         '((small
-           :default-family "Iosevka Comfy Motion Fixed"
+           :default-family "Aporetic Sans Mono"
            :default-height 80
-           :variable-pitch-family "Iosevka Comfy Duo")
+           :variable-pitch-family "Aporetic Sans")
           (regular)
           (medium
            :default-weight semilight
@@ -194,7 +207,7 @@
            ;; I keep all properties for didactic purposes, but most can be
            ;; omitted.  See the fontaine manual for the technicalities:
            ;; <https://protesilaos.com/emacs/fontaine>.
-           :default-family "Iosevka Comfy Fixed"
+           :default-family "Aporetic Sans Mono"
            :default-weight regular
            :default-height 100
 
@@ -206,7 +219,7 @@
            :fixed-pitch-serif-weight nil ; falls back to :default-weight
            :fixed-pitch-serif-height 1.0
 
-           :variable-pitch-family "Iosevka Comfy Motion Duo"
+           :variable-pitch-family "Aporetic Sans"
            :variable-pitch-weight nil
            :variable-pitch-height 1.0
 
@@ -244,6 +257,44 @@
   (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular))
   (fontaine-mode 1))
 
+(use-package expand-region
+  :ensure t
+  :bind ("C-=" . er/expand-region))
+
+(use-package embrace
+  :ensure t
+  )
+
+(use-package spacious-padding
+  :ensure t
+  :config
+  (spacious-padding-mode 1)
+  )
+
+(use-package org
+  :ensure nil ; do not try to install it as it is built-in
+  :config
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+
+  (setq org-directory "~/my_org_files/")
+  (setq org-default-notes-file (concat org-directory "/my_main_notes_file.org"))
+  (setq org-agenda-files (list org-directory))
+
+  ;; Learn about the ! and more by reading the relevant section of the
+  ;; Org manual.  Evaluate: (info "(org) Tracking TODO state changes")
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "WAIT(w!)" "|" "CANCEL(c!)" "DONE(d!)")))
+  :custom
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline (expand-file-name "todo.org" org-directory) "Tasks")
+           "* TODO %?\n  %i\n  %a")
+          ("w" "Work" entry (file+headline (expand-file-name "work.org" org-directory) "Work")
+           "* TODO %?\n  %i\n  %a")
+          ("p" "Personal" entry (file+headline (expand-file-name "personal.org" org-directory) "Personal")
+           "* TODO %?\n  %i\n  %a")))
+  )
+
 ;; Custom function for reindenting (kept outside use-package as it's not package-specific)
 (defun drr-my-reindent-file ()
   "Reindent the entire file and return to the original cursor position."
@@ -272,35 +323,3 @@
   "Inserts the current date in mm-dd-yyyy format"
   (interactive)
   (insert (format-time-string "%m-%d-%Y")))
-
-(use-package org
-  :ensure nil ; do not try to install it as it is built-in
-  :config
-  (setq org-log-done 'time)
-  (setq org-log-into-drawer t)
-
-  (setq org-directory "~/my_org_files/")
-  (setq org-default-notes-file (concat org-directory "/my_main_notes_file.org"))
-  (setq org-agenda-files (list org-directory))
-
-  ;; Learn about the ! and more by reading the relevant section of the
-  ;; Org manual.  Evaluate: (info "(org) Tracking TODO state changes")
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "WAIT(w!)" "|" "CANCEL(c!)" "DONE(d!)")))
-  :custom
-  (org-capture-templates
-   '(("f" "Fleeting note"
-      item
-      (file+headline org-default-notes-file "Notes")
-      "- %?")
-     ("p" "Permanent note" plain
-      (file denote-last-path)
-      #'denote-org-capture
-      :no-save t
-      :immediate-finish nil
-      :kill-buffer t
-      :jump-to-captured t)
-     ("t" "New task" entry
-      (file+headline org-default-notes-file "Tasks")
-      "* T
-  )
